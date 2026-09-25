@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Compras del hogar</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="theme-color" content="#0E6B5A">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#F2F6F4;--card:#fff;--ink:#15302A;--mute:#5F746E;--line:#D9E4E0;--acc:#0E6B5A;--accink:#fff;--warn:#B4531A;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1B18;--card:#172622;--ink:#E6F1ED;--mute:#93AAA3;--line:#28423B;--acc:#3CC7A8;--accink:#062019;--warn:#F0A070}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.4}
+main{max-width:560px;margin:0 auto;padding:16px 14px 90px}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:8px 0 12px;z-index:2}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font-size:22px;font-weight:800;margin:0}
+.count{font-size:40px;font-weight:800;line-height:1;color:var(--acc);font-variant-numeric:tabular-nums}
+.count small{font-size:16px;font-weight:600;color:var(--mute)}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:10px 0 6px}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .25s}
+.meta{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--mute);flex-wrap:wrap}
+.tot{display:flex;gap:16px;font-size:14px;margin-top:6px}
+.tot b{font-weight:800}
+.add{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:6px 0 18px}
+.add .n{grid-column:1/-1}.add .c{grid-column:1/-1}
+input,select,button{font:inherit;color:inherit}
+input,select{width:100%;min-height:46px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:16px}
+.add button{grid-column:1/-1;min-height:48px;border:0;border-radius:10px;background:var(--acc);color:var(--accink);font-weight:800;cursor:pointer}
+h2{font-size:15px;font-weight:800;margin:18px 2px 6px}
+ul{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+li{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--line);min-height:56px}
+li:last-child{border-bottom:0}
+.chk{display:flex;align-items:center;justify-content:center;width:56px;align-self:stretch;cursor:pointer;flex:none}
+.chk input{position:absolute;opacity:0;width:1px;height:1px}
+.box{width:28px;height:28px;border-radius:8px;border:2px solid var(--mute);display:grid;place-items:center;transition:background .15s}
+.chk input:checked+.box{background:var(--acc);border-color:var(--acc)}
+.chk input:checked+.box::after{content:"";width:8px;height:14px;border:solid var(--accink);border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.chk input:focus-visible+.box{outline:3px solid var(--acc);outline-offset:2px}
+.txt{flex:1;min-width:0;padding:8px 0}
+.txt b{display:block;font-weight:600;overflow-wrap:anywhere}
+.txt small{color:var(--mute);font-size:13px}
+li.done .txt b{text-decoration:line-through;color:var(--mute)}
+.x{width:48px;align-self:stretch;border:0;background:none;color:var(--mute);font-size:24px;cursor:pointer;flex:none}
+.x:hover,.x:focus-visible{color:var(--warn)}
+.empty{text-align:center;color:var(--mute);padding:36px 12px}
+.clear{margin-top:20px;width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-weight:600;cursor:pointer}
+.clear.sure{border-color:var(--warn);color:var(--warn)}
+#toast{position:fixed;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));max-width:532px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:10px;font-size:14px;display:none;z-index:5}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="top"><h1>Compras del hogar</h1><div class="count" id="count">0<small>/0</small></div></div>
+  <div class="bar"><i id="fill"></i></div>
+  <div class="meta"><span id="status">Conectando…</span><span id="left"></span></div>
+  <div class="tot" id="tot"></div>
+</header>
+
+<form class="add" id="f" autocomplete="off">
+  <input class="n" id="name" placeholder="Producto (ej. leche, tortillas)" required maxlength="80" aria-label="Producto">
+  <input id="qty" placeholder="Cant." maxlength="20" aria-label="Cantidad">
+  <input id="price" placeholder="Precio $" inputmode="decimal" maxlength="9" aria-label="Precio total, opcional">
+  <span></span>
+  <select class="c" id="cat" aria-label="Categoría"></select>
+  <button type="submit">Agregar a la lista</button>
+</form>
+
+<div id="list"></div>
+<button class="clear" id="clear" hidden></button>
+
+<div class="add" id="importBox" style="margin-top:24px">
+  <div style="grid-column:1/-1;font-size:13px;color:var(--mute)">
+    Importar de una sola vez (para traer lo que ya tenías capturado): una línea por producto,
+    formato <code>nombre; cantidad; precio; categoría</code> (cantidad, precio y categoría son opcionales).
+  </div>
+  <textarea id="importText" rows="6" style="grid-column:1/-1;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font:inherit" placeholder="Vinagre de manzana; 1; 18; Abarrotes&#10;Leche; 2 litros; ; Carnes y lácteos"></textarea>
+  <button type="button" id="importBtn" style="grid-column:1/-1;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-weight:700;cursor:pointer">Importar lista</button>
+</div>
+</main>
+<div id="toast" role="status"></div>
+
+<!-- ======================================================================
+  CONFIGURACIÓN DE FIREBASE — pega aquí tu propio objeto de configuración.
+  Lo obtienes en: console.firebase.google.com → tu proyecto → ⚙️ Configuración
+  del proyecto → "Tus apps" → app web → "Configuración del SDK".
+  ====================================================================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  onSnapshot, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "PEGA_AQUI_TU_API_KEY",
+  authDomain: "PEGA_AQUI_TU_PROYECTO.firebaseapp.com",
+  projectId: "PEGA_AQUI_TU_PROYECTO_ID",
+  storageBucket: "PEGA_AQUI_TU_PROYECTO.appspot.com",
+  messagingSenderId: "PEGA_AQUI_TU_SENDER_ID",
+  appId: "PEGA_AQUI_TU_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const itemsCol = collection(db, "items");
+
+var CATS=["Abarrotes","Frutas y verduras","Carnes y lácteos","Limpieza","Cuidado personal","Otros"];
+var items=[],armed=false;
+var $=function(s){return document.querySelector(s)};
+var money=function(n){return n.toLocaleString("es-MX",{style:"currency",currency:"MXN"})};
+var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
+function toast(m){var t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(function(){t.style.display="none"},3500)}
+
+async function op(kind,a){
+  try{
+    if(kind==="add")await addDoc(itemsCol,{name:a.name,qty:a.qty,price:a.price,cat:a.cat,done:false,at:Date.now()});
+    else if(kind==="toggle")await updateDoc(doc(db,"items",a.id),{done:a.done});
+    else if(kind==="remove")await deleteDoc(doc(db,"items",a));
+    else if(kind==="clear"){for(var i=0;i<a.length;i++)await deleteDoc(doc(db,"items",a[i]))}
+  }catch(e){
+    toast("No se pudo guardar. Revisa tu conexión e intenta de nuevo.");
+  }
+}
+
+function render(status){
+  var total=items.length,done=items.filter(function(i){return i.done}).length;
+  $("#count").innerHTML=done+"<small>/"+total+"</small>";
+  $("#fill").style.width=total?Math.round(done/total*100)+"%":"0";
+  $("#status").textContent=status||"Lista compartida, se actualiza sola";
+  $("#left").textContent=total?(total-done)+" por comprar":"";
+  var pend=0,got=0;items.forEach(function(i){var p=Number(i.price)||0;if(i.done)got+=p;else pend+=p});
+  $("#tot").innerHTML=(pend||got)?"<span>Por comprar: <b>"+money(pend)+"</b></span><span>Comprado: <b>"+money(got)+"</b></span>":"";
+  var html="";
+  var cats=CATS.slice();items.forEach(function(i){if(cats.indexOf(i.cat)<0)cats.push(i.cat)});
+  cats.forEach(function(c){
+    var g=items.filter(function(i){return i.cat===c}).sort(function(a,b){return (a.done?1:0)-(b.done?1:0)||(a.at||0)-(b.at||0)});
+    if(!g.length)return;
+    html+="<h2>"+esc(c)+"</h2><ul>"+g.map(function(i){
+      var sub=[i.qty,Number(i.price)?money(Number(i.price)):""].filter(Boolean).join(" · ");
+      return '<li class="'+(i.done?"done":"")+'"><label class="chk"><input type="checkbox" data-id="'+esc(i.id)+'"'+(i.done?" checked":"")+' aria-label="Marcar '+esc(i.name)+'"><span class="box"></span></label><div class="txt"><b>'+esc(i.name)+'</b>'+(sub?"<small>"+esc(sub)+"</small>":"")+'</div><button class="x" data-del="'+esc(i.id)+'" aria-label="Quitar '+esc(i.name)+'">×</button></li>';
+    }).join("")+"</ul>";
+  });
+  $("#list").innerHTML=html||'<div class="empty">Aún no hay productos.<br>Agrega el primero arriba.</div>';
+  var b=$("#clear");b.hidden=!done;b.className="clear"+(armed?" sure":"");
+  b.textContent=armed?"Toca otra vez para quitar "+done+" comprados":"Quitar comprados ("+done+")";
+}
+
+$("#cat").innerHTML=CATS.map(function(c){return "<option>"+c+"</option>"}).join("");
+$("#f").addEventListener("submit",function(e){
+  e.preventDefault();
+  var n=$("#name").value.trim();if(!n)return;
+  var p=parseFloat($("#price").value.replace(",","."));
+  op("add",{name:n,qty:$("#qty").value.trim(),price:isFinite(p)&&p>0?p:0,cat:$("#cat").value});
+  $("#name").value="";$("#qty").value="";$("#price").value="";$("#name").focus();
+});
+$("#list").addEventListener("change",function(e){var id=e.target.getAttribute("data-id");if(id)op("toggle",{id:id,done:e.target.checked})});
+$("#list").addEventListener("click",function(e){var b=e.target.closest("[data-del]");if(b)op("remove",b.getAttribute("data-del"))});
+$("#clear").addEventListener("click",function(){
+  if(!armed){armed=true;render();clearTimeout($("#clear").h);$("#clear").h=setTimeout(function(){armed=false;render()},3000);return}
+  armed=false;op("clear",items.filter(function(i){return i.done}).map(function(i){return i.id}));
+});
+
+render("Conectando…");
+onAuthStateChanged(auth, function(user){
+  if(!user){ signInAnonymously(auth).catch(function(){ render("No se pudo conectar (revisa la configuración de Firebase)"); }); return; }
+  onSnapshot(itemsCol, function(snap){
+    items = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    render();
+  }, function(){ render("Sin conexión con la lista compartida"); });
+});
+
+$("#importBtn").addEventListener("click", async function(){
+  var raw = $("#importText").value.trim();
+  if(!raw) return;
+  var lines = raw.split("\n").map(function(l){return l.trim()}).filter(Boolean);
+  var btn = $("#importBtn"); btn.disabled = true; btn.textContent = "Importando…";
+  for (var i=0;i<lines.length;i++){
+    var parts = lines[i].split(";").map(function(s){return s.trim()});
+    var name = parts[0]; if(!name) continue;
+    var qty = parts[1]||"";
+    var price = parseFloat((parts[2]||"").replace(",","."));
+    var cat = parts[3] || "Otros";
+    await op("add",{name:name, qty:qty, price:isFinite(price)&&price>0?price:0, cat:cat});
+  }
+  btn.disabled = false; btn.textContent = "Importar lista";
+  $("#importText").value = "";
+  toast(lines.length + " productos importados");
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("./service-worker.js"); });
+}
+</script>
+</body>
+</html>
