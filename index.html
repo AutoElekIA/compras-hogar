@@ -31,7 +31,7 @@ h1{font-size:22px;font-weight:800;margin:0}
 .add .n{grid-column:1/-1}.add .c{grid-column:1/-1}
 input,select,button{font:inherit;color:inherit}
 input,select{width:100%;min-height:46px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:16px}
-.add button{grid-column:1/-1;min-height:48px;border:0;border-radius:10px;background:var(--acc);color:var(--accink);font-weight:800;cursor:pointer}
+.add>button{grid-column:1/-1;min-height:48px;border:0;border-radius:10px;background:var(--acc);color:var(--accink);font-weight:800;cursor:pointer}
 h2{font-size:15px;font-weight:800;margin:18px 2px 6px}
 ul{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 li{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--line);min-height:56px}
@@ -54,6 +54,15 @@ li.done .txt b{text-decoration:line-through;color:var(--mute)}
 #toast{position:fixed;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));max-width:532px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:10px;font-size:14px;display:none;z-index:5}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Autocompletado de productos */
+.ac-wrap{position:relative}
+.ac{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:12px;max-height:260px;overflow:auto;z-index:20;box-shadow:0 10px 30px rgba(0,0,0,.14)}
+.ac button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:10px 12px;font:inherit;font-weight:400;color:inherit;cursor:pointer;min-height:0}
+.ac button:last-child{border-bottom:0}
+.ac button:hover,.ac button[aria-selected="true"]{background:var(--bg)}
+.ac button b{font-weight:600;display:block}
+.ac button small{color:var(--mute);font-size:12px;display:block;margin-top:2px}
 </style>
 </head>
 <body>
@@ -66,7 +75,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 </header>
 
 <form class="add" id="f" autocomplete="off">
-  <input class="n" id="name" placeholder="Producto (ej. leche, tortillas)" required maxlength="80" aria-label="Producto">
+  <div class="ac-wrap n">
+    <input id="name" placeholder="Producto (ej. leche, tortillas)" required maxlength="80" aria-label="Producto" autocomplete="off" autocapitalize="sentences">
+    <div class="ac" id="ac" hidden role="listbox"></div>
+  </div>
   <input id="qty" placeholder="Cant." maxlength="20" aria-label="Cantidad">
   <input id="price" placeholder="Precio $" inputmode="decimal" maxlength="9" aria-label="Precio total, opcional">
   <span></span>
@@ -88,17 +100,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 </main>
 <div id="toast" role="status"></div>
 
-<!-- ======================================================================
-  CONFIGURACIÓN DE FIREBASE — pega aquí tu propio objeto de configuración.
-  Lo obtienes en: console.firebase.google.com → tu proyecto → ⚙️ Configuración
-  del proyecto → "Tus apps" → app web → "Configuración del SDK".
-  ====================================================================== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
-  onSnapshot, serverTimestamp
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -114,6 +121,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const itemsCol = collection(db, "items");
+const catalogCol = collection(db, "catalog");
 
 var CATS=["Abarrotes","Frutas y verduras","Carnes y lácteos","Limpieza","Cuidado personal","Otros"];
 var items=[],armed=false;
@@ -121,6 +129,111 @@ var $=function(s){return document.querySelector(s)};
 var money=function(n){return n.toLocaleString("es-MX",{style:"currency",currency:"MXN"})};
 var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
 function toast(m){var t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(function(){t.style.display="none"},3500)}
+
+// ---------- Catálogo precargado (nombre, categoría) ----------
+var PRECARGADOS=[
+  ["Arroz","Abarrotes"],["Frijol","Abarrotes"],["Aceite","Abarrotes"],["Sal","Abarrotes"],
+  ["Azúcar","Abarrotes"],["Café","Abarrotes"],["Té","Abarrotes"],["Harina","Abarrotes"],
+  ["Pasta","Abarrotes"],["Atún","Abarrotes"],["Sardinas","Abarrotes"],["Salchichas","Abarrotes"],
+  ["Mayonesa","Abarrotes"],["Mostaza","Abarrotes"],["Kétchup","Abarrotes"],["Salsa","Abarrotes"],
+  ["Vinagre","Abarrotes"],["Miel","Abarrotes"],["Avena","Abarrotes"],["Cereal","Abarrotes"],
+  ["Galletas","Abarrotes"],["Pan de caja","Abarrotes"],["Tortillas","Abarrotes"],
+  ["Consomé","Abarrotes"],["Caldo de pollo","Abarrotes"],["Chocolate","Abarrotes"],
+  ["Leche condensada","Abarrotes"],["Leche evaporada","Abarrotes"],["Levadura","Abarrotes"],
+  ["Chiles en lata","Abarrotes"],["Frijoles refritos","Abarrotes"],["Puré de tomate","Abarrotes"],
+  ["Manzana","Frutas y verduras"],["Plátano","Frutas y verduras"],["Naranja","Frutas y verduras"],
+  ["Limón","Frutas y verduras"],["Tomate","Frutas y verduras"],["Jitomate","Frutas y verduras"],
+  ["Cebolla","Frutas y verduras"],["Chile","Frutas y verduras"],["Papa","Frutas y verduras"],
+  ["Zanahoria","Frutas y verduras"],["Lechuga","Frutas y verduras"],["Aguacate","Frutas y verduras"],
+  ["Cilantro","Frutas y verduras"],["Perejil","Frutas y verduras"],["Pepino","Frutas y verduras"],
+  ["Betabel","Frutas y verduras"],["Brócoli","Frutas y verduras"],["Coliflor","Frutas y verduras"],
+  ["Espinaca","Frutas y verduras"],["Acelga","Frutas y verduras"],["Ejotes","Frutas y verduras"],
+  ["Chayote","Frutas y verduras"],["Calabacita","Frutas y verduras"],["Camote","Frutas y verduras"],
+  ["Mango","Frutas y verduras"],["Papaya","Frutas y verduras"],["Sandía","Frutas y verduras"],
+  ["Melón","Frutas y verduras"],["Fresa","Frutas y verduras"],["Uva","Frutas y verduras"],
+  ["Piña","Frutas y verduras"],["Guayaba","Frutas y verduras"],
+  ["Leche","Carnes y lácteos"],["Queso","Carnes y lácteos"],["Crema","Carnes y lácteos"],
+  ["Yogurt","Carnes y lácteos"],["Mantequilla","Carnes y lácteos"],["Huevos","Carnes y lácteos"],
+  ["Pollo","Carnes y lácteos"],["Carne de res","Carnes y lácteos"],["Carne de cerdo","Carnes y lácteos"],
+  ["Pescado","Carnes y lácteos"],["Jamón","Carnes y lácteos"],["Tocino","Carnes y lácteos"],
+  ["Chorizo","Carnes y lácteos"],["Carne molida","Carnes y lácteos"],
+  ["Jabón de trastes","Limpieza"],["Detergente","Limpieza"],["Suavizante","Limpieza"],
+  ["Cloro","Limpieza"],["Fabuloso","Limpieza"],["Pino","Limpieza"],["Limpiador","Limpieza"],
+  ["Escoba","Limpieza"],["Trapeador","Limpieza"],["Jerga","Limpieza"],["Fibras","Limpieza"],
+  ["Bolsas de basura","Limpieza"],["Servilletas","Limpieza"],["Toallas de papel","Limpieza"],
+  ["Papel higiénico","Limpieza"],
+  ["Shampoo","Cuidado personal"],["Acondicionador","Cuidado personal"],["Jabón de baño","Cuidado personal"],
+  ["Pasta dental","Cuidado personal"],["Cepillo de dientes","Cuidado personal"],
+  ["Desodorante","Cuidado personal"],["Rastrillo","Cuidado personal"],
+  ["Toallas sanitarias","Cuidado personal"],["Pañales","Cuidado personal"],
+  ["Pilas","Otros"],["Focos","Otros"],["Velas","Otros"],["Cerillos","Otros"],
+  ["Gas","Otros"],["Agua","Otros"],["Hielo","Otros"]
+];
+
+var catalog=[];       // productos aprendidos, vienen de Firestore
+var acList=[],acIndex=-1;
+
+function findMatches(q){
+  var ql=q.trim().toLowerCase();
+  if(!ql)return [];
+  var seen={},out=[];
+  function add(name,cat,fromCatalog,meta){
+    var key=name.toLowerCase();
+    if(seen[key])return;
+    seen[key]=1;
+    out.push({name:name,cat:cat,fromCatalog:fromCatalog,meta:meta||{}});
+  }
+  // 1. Catálogo propio (historial) con prefijo
+  catalog.forEach(function(c){ if(c.name && c.name.toLowerCase().indexOf(ql)===0) add(c.name,c.cat,true,c); });
+  // 2. Precargados con prefijo
+  PRECARGADOS.forEach(function(p){ if(p[0].toLowerCase().indexOf(ql)===0) add(p[0],p[1],false); });
+  // 3. Catálogo propio que contiene
+  catalog.forEach(function(c){ if(c.name && c.name.toLowerCase().indexOf(ql)>0) add(c.name,c.cat,true,c); });
+  // 4. Precargados que contienen
+  PRECARGADOS.forEach(function(p){ if(p[0].toLowerCase().indexOf(ql)>0) add(p[0],p[1],false); });
+  return out.slice(0,8);
+}
+
+function renderAC(){
+  var box=$("#ac");
+  if(!acList.length){box.hidden=true;box.innerHTML="";return}
+  box.hidden=false;
+  box.innerHTML=acList.map(function(it,i){
+    var sub=it.fromCatalog?"Ya lo compraste antes":it.cat;
+    return '<button type="button" data-i="'+i+'"'+(i===acIndex?' aria-selected="true"':'')+'><b>'+esc(it.name)+'</b><small>'+esc(sub)+'</small></button>';
+  }).join("");
+}
+
+function selectAC(i){
+  var it=acList[i];
+  if(!it)return;
+  $("#name").value=it.name;
+  if(it.cat)$("#cat").value=it.cat;
+  if(it.fromCatalog&&it.meta){
+    if(!$("#qty").value&&it.meta.lastQty)$("#qty").value=it.meta.lastQty;
+    if(!$("#price").value&&it.meta.lastPrice)$("#price").value=it.meta.lastPrice;
+  }
+  $("#ac").hidden=true;acList=[];acIndex=-1;
+}
+
+async function upsertCatalog(name,cat,price,qty){
+  if(!catalogCol)return;
+  var key=name.toLowerCase();
+  var existing=catalog.find(function(c){return (c.name||"").toLowerCase()===key});
+  try{
+    if(existing){
+      await updateDoc(doc(db,"catalog",existing.id),{
+        cat:cat,lastPrice:price,lastQty:qty,
+        uses:(existing.uses||0)+1,updatedAt:Date.now()
+      });
+    }else{
+      await addDoc(catalogCol,{
+        name:name,cat:cat,lastPrice:price,lastQty:qty,
+        uses:1,updatedAt:Date.now()
+      });
+    }
+  }catch(e){/* silencioso */}
+}
 
 async function op(kind,a){
   try{
@@ -157,12 +270,39 @@ function render(status){
 }
 
 $("#cat").innerHTML=CATS.map(function(c){return "<option>"+c+"</option>"}).join("");
+
+// Autocompletado
+$("#name").addEventListener("input",function(){
+  acList=findMatches(this.value);
+  acIndex=acList.length?0:-1;
+  renderAC();
+});
+$("#name").addEventListener("keydown",function(e){
+  if($("#ac").hidden)return;
+  if(e.key==="ArrowDown"){e.preventDefault();acIndex=Math.min(acIndex+1,acList.length-1);renderAC();}
+  else if(e.key==="ArrowUp"){e.preventDefault();acIndex=Math.max(acIndex-1,0);renderAC();}
+  else if(e.key==="Enter"){if(acIndex>=0){e.preventDefault();selectAC(acIndex);}}
+  else if(e.key==="Escape"){$("#ac").hidden=true;}
+});
+$("#ac").addEventListener("mousedown",function(e){
+  var b=e.target.closest("[data-i]");
+  if(b){e.preventDefault();selectAC(parseInt(b.getAttribute("data-i"),10));$("#name").focus();}
+});
+$("#name").addEventListener("blur",function(){
+  setTimeout(function(){$("#ac").hidden=true;},180);
+});
+
 $("#f").addEventListener("submit",function(e){
   e.preventDefault();
   var n=$("#name").value.trim();if(!n)return;
   var p=parseFloat($("#price").value.replace(",","."));
-  op("add",{name:n,qty:$("#qty").value.trim(),price:isFinite(p)&&p>0?p:0,cat:$("#cat").value});
+  var qty=$("#qty").value.trim();
+  var cat=$("#cat").value;
+  var price=isFinite(p)&&p>0?p:0;
+  op("add",{name:n,qty:qty,price:price,cat:cat});
+  upsertCatalog(n,cat,price,qty);
   $("#name").value="";$("#qty").value="";$("#price").value="";$("#name").focus();
+  $("#ac").hidden=true;
 });
 $("#list").addEventListener("change",function(e){var id=e.target.getAttribute("data-id");if(id)op("toggle",{id:id,done:e.target.checked})});
 $("#list").addEventListener("click",function(e){var b=e.target.closest("[data-del]");if(b)op("remove",b.getAttribute("data-del"))});
@@ -178,6 +318,9 @@ onAuthStateChanged(auth, function(user){
     items = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
     render();
   }, function(){ render("Sin conexión con la lista compartida"); });
+  onSnapshot(catalogCol, function(snap){
+    catalog = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+  }, function(){/* silencioso */});
 });
 
 $("#importBtn").addEventListener("click", async function(){
@@ -191,7 +334,9 @@ $("#importBtn").addEventListener("click", async function(){
     var qty = parts[1]||"";
     var price = parseFloat((parts[2]||"").replace(",","."));
     var cat = parts[3] || "Otros";
-    await op("add",{name:name, qty:qty, price:isFinite(price)&&price>0?price:0, cat:cat});
+    var priceVal = isFinite(price)&&price>0?price:0;
+    await op("add",{name:name, qty:qty, price:priceVal, cat:cat});
+    await upsertCatalog(name, cat, priceVal, qty);
   }
   btn.disabled = false; btn.textContent = "Importar lista";
   $("#importText").value = "";
