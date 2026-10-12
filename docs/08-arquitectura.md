@@ -42,6 +42,7 @@ para procesamiento de pagos. Sin servidor propio en Fase 1.
       store: "Soriana",
       notes: "Marca Lala",
       done: false,
+      requiereHielera: true,             // si necesita cadena de frio
       creadoPor: "uid1",                 // quien lo agrego
       at: timestamp
     }
@@ -68,10 +69,14 @@ para procesamiento de pagos. Sin servidor propio en Fase 1.
       stripeAccountId: "acct_xxx",       // cuenta Stripe Connect
       direccion: "...",
       telefono: "...",
+      vertical: "abarrotes"|"restaurante"|"farmacia"|"panaderia"|"servicios",
       categorias: ["Abarrotes", "Frutas"],
       horario: {...},
       activo: true,
-      comisionPct: 5.0,                  // % que cobra AutoElekIA
+      comisionPct: 5.0,                  // abarrotes: 5%
+                                         // restaurantes: 8%
+                                         // farmacia: 6%
+                                         // servicios: 10%
       creadoEn: timestamp
     }
 
@@ -126,6 +131,7 @@ para procesamiento de pagos. Sin servidor propio en Fase 1.
        └─ Muestra precio total + comision
 
     3. FAMILIA elige comercio
+       ├─ App muestra: subtotal + envio $30 + total
        └─ App crea pedido en Firestore (estado=pendiente)
 
     4. CLOUD FUNCTION (trigger on pedido create)
@@ -189,14 +195,47 @@ para procesamiento de pagos. Sin servidor propio en Fase 1.
 
 ### Cobro con application fee
 
+Ejemplo: ticket $400 + envio $30 = familia paga $430
+
+Desglose:
+- Comision AutoElekIA: 5% de $400 = $20
+- Envio cobrado a familia: $30
+- Pago al chofer: -$30
+- Neto AutoElekIA: $20
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: 25000,                     // $250.00 MXN
+      amount: 43000,                     // $430.00 MXN
       currency: "mxn",
-      application_fee_amount: 1250,      // $12.50 comision AutoElekIA
+      application_fee_amount: 2000,      // $20 comision AutoElekIA
       transfer_data: {
-        destination: "acct_comercio"     // cuenta del comercio
+        destination: "acct_comercio"     // recibe $400
       },
-      metadata: {pedidoId: "..."}
+      metadata: {
+        pedidoId: "...",
+        envio: 3000,                     // $30 MXN
+        vertical: "abarrotes"
+      }
+    });
+
+El envio de $30 se maneja por separado:
+- Se retiene en la cuenta plataforma de AutoElekIA
+- Se distribuye al chofer al confirmar entrega
+- Stripe Connect permite transfers adicionales
+
+    const transfer = await stripe.transfers.create({
+      amount: 3000,                      // $30 MXN al chofer
+      currency: "mxn",
+      destination: "acct_chofer",
+      transfer_group: "pedido_xxx"
+    });
+
+Pago al chofer (via Stripe Connect tambien):
+
+    const transfer = await stripe.transfers.create({
+      amount: 3000,                      // $30 MXN
+      currency: "mxn",
+      destination: "acct_chofer",
+      transfer_group: "pedido_xxx"
     });
 
 ## Cloud Functions necesarias

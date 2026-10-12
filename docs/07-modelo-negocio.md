@@ -20,11 +20,41 @@ que ya operan rutas de transporte escolar.
 
 ### 2. Comercios (clientes que pagan)
 
+**Verticales soportadas:**
+
+- **Abarrotes / super / tiendas de barrio:** margen bajo (10-15%),
+  volumen alto. Comision sugerida: 5%.
+- **Restaurantes y comida preparada:** margen alto (50-70%),
+  recurrencia diaria. Comision sugerida: 8%.
+- **Panaderia, tortilleria, carniceria:** margen bajo, ticket bajo.
+  Comision sugerida: 5%.
+- **Farmacias:** margen medio, urgencia alta. Comision sugerida: 6%.
+- **Servicios (taller, cerrajeria, etc.):** ticket alto. Comision
+  sugerida: 10%.
+
+**Lo que hacen:**
 - Publican su catalogo y ofertas.
 - Reciben pedidos de familias reales.
 - Preparan el pedido y emiten ticket.
 - Reciben el pago directo de la familia via Stripe Connect.
 - **Pagan a AutoElekIA una comision por servicio.**
+
+**Ventaja para el comercio:**
+- Rappi / Uber Eats cobran 25-35% al comercio.
+- Compras del Hogar cobra 5-10% segun vertical.
+- Un restaurante que hoy paga 30% a Uber Eats y migra a nosotros
+  multiplica su margen por 3x-6x.
+
+**Sobre los restaurantes especificamente:**
+- Ya tienen infraestructura de delivery (empaques, protocolo).
+- Ya aceptan pedidos a domicilio (usan Rappi/Uber Eats).
+- Solo necesitan un repartidor mas barato.
+- Los choferes escolares (ociosos entre rutas) son el repartidor
+  perfecto: conocen la zona, tienen vehiculo, ya estan en movimiento.
+
+**Vertical de mayor potencial inicial:** restaurantes y comida
+preparada. La recurrencia es casi diaria, el margen es alto, y la
+conversacion de venta es simple: "pagas 30% hoy, con nosotros 8%".
 
 ### 3. Choferes (aliados operativos)
 
@@ -113,6 +143,189 @@ que ya operan rutas de transporte escolar.
 - **Opcion D:** Combinacion de A + C
 
 **Decision pendiente** (definir con los choferes antes de lanzar).
+
+
+
+
+## Seguridad como diferenciador
+
+Las plataformas actuales (Rappi, Uber Eats, Cornershop) usan
+motocicletas como vehiculo principal. En Mexico, eso significa:
+
+- Motos destartaladas, con anos de uso, sin mantenimiento regular.
+- Sin documentacion en regla (placas, licencia, poliza).
+- Sin seguro del repartidor.
+- Repartidor anonimo, rotativo, sin relacion con la familia.
+- Cobertura de carga limitada (una mochila termica).
+
+**Nuestra propuesta:**
+
+| Aspecto | Competencia | Compras del Hogar |
+|---------|-------------|-------------------|
+| Vehiculo | Moto destartalada | Camioneta escolar |
+| Documentacion | Nula o irregular | Federal B, poliza, verificacion |
+| Seguro | Del repartidor | De la empresa |
+| Chofer | Anonimo, rotativo | Conocido (chofer escolar) |
+| Capacidad | Mochila termica | Hieleras grandes |
+| Productos fragiles | No soporta | Si soporta |
+| Relacion con familia | Cero | Ya la conocen |
+
+**Mensaje de venta:**
+
+> "Tu super viaja seguro, no en una moto destartalada."
+
+**Ventaja emocional (México):**
+
+Las familias ya conocen al chofer escolar. Le confian a sus hijos
+todos los dias. Ahora tambien le confian su despensa. **Eso no tiene
+precio en el mercado mexicano.**
+
+**Ventaja operativa:**
+
+- Las camionetas escolares ya tienen capacidad de 15-35 pasajeros.
+- Con los asientos ocupados por hieleras, caben 20-30 pedidos
+  pequenos o 5-10 pedidos grandes en una sola ruta.
+- Costo por entrega marginal: casi cero (el vehiculo ya esta en
+  circulacion).
+
+
+## Protocolo sanitario
+
+**Los choferes estan capacitados tecnicamente para el manejo higienico
+de alimentos, cumpliendo con las normas sanitarias mexicanas
+(NOM-251-SSA1 y aplicables).**
+
+### Cadena de frio completa
+
+- **Equipo:** hieleras rigidas con geles refrigerantes, capacidad de
+  mantener temperatura por 4-6 horas.
+- **Pre-enfriamiento:** los geles se congelan la noche anterior.
+- **Monitoreo:** temperatura objetivo por tipo de producto.
+- **Registro:** incidencias registradas en la app (foto + timestamp).
+
+### Prevencion de contaminacion cruzada
+
+Los operadores aplican el protocolo de separacion por tipo de producto:
+
+- **Carnes rojas crudas:** empaque primario + bolsa sellada + hielera
+  dedicada.
+- **Pescados y mariscos:** empaque primario + hielera dedicada
+  (nunca comparte con carnes rojas).
+- **Lacteos:** hielera separada o division rigida dentro de la
+  misma hielera.
+- **Alimentos preparados / cocidos:** empaque del restaurante +
+  bolsa externa sellada.
+- **Frutas y verduras:** bolsa transpirable, hielera aparte.
+- **No perecederos:** sin restriccion de temperatura.
+
+### Capacitacion tecnica de operadores
+
+Los choferes cuentan con:
+
+- Curso de manejo higienico de alimentos.
+- Protocolo escrito de cadena de frio y contaminacion cruzada.
+- Identificacion de temperaturas criticas por producto.
+- Procedimiento de actuacion ante incidencias (derrame, rotura de
+  empaque, exceso de tiempo en transito).
+- Constancia de capacitacion vigente.
+
+### Por que esto es un diferenciador
+
+| Aspecto | Competencia (moto) | Compras del Hogar |
+|---------|-------------------|-------------------|
+| Carnes rojas | Sin control | Hielera dedicada + empaque |
+| Pescados y mariscos | Casi nunca | Hielera dedicada exclusiva |
+| Lacteos | Sin control | Cadena de frio continua |
+| Contaminacion cruzada | Sin protocolo | Protocolo escrito aplicado |
+| Capacitacion | Ninguna | Curso formal documentado |
+| Trazabilidad | Cero | Registro por pedido |
+| Normas sanitarias | No aplica | Cumplimiento NOM |
+
+**Mensaje de venta:**
+
+> "Tus carnes, pescados y lacteos viajan con protocolo sanitario.
+> No en una mochila termica de moto."
+
+### Alcance de productos
+
+Con este protocolo, la plataforma puede manejar sin restricciones:
+
+- Carnes rojas, pollo y cerdo (crudas y cocidas).
+- Pescados y mariscos frescos.
+- Lacteos y derivados.
+- Embutidos y quesos.
+- Alimentos preparados de restaurantes.
+- Farmacia con requerimiento de temperatura.
+- Frutas y verduras.
+- Abarrotes no perecederos.
+
+## Cadena de frio
+
+**Solucion operativa:** el comercio provee la hielera + geles
+refrigerantes al chofer cuando entrega el pedido.
+
+**Por que funciona:**
+
+- El comercio ya tiene hieleras para su operacion normal (uso diario).
+- Costo marginal por pedido: ~$0 (reutilizables 1000+ veces).
+- Al comercio le conviene: garantiza calidad, evita devoluciones,
+  fideliza al cliente.
+- El chofer solo transporta la hielera; no invierte en equipo.
+- La hielera se devuelve al comercio en la siguiente recoleccion.
+
+**Cobertura de productos:**
+
+- Abarrotes no perecederos: sin restriccion.
+- Lacteos, carnes, embutidos: hielera con geles.
+- Alimentos preparados (tortas, hamburguesas, pozole): hielera +
+  empaque del restaurante.
+- Farmacia (medicamentos que requieren temperatura): hielera pequena.
+- Helados / congelados: hielera + hielo seco si el comercio lo provee.
+
+**Regla operativa:**
+- El comercio decide si su producto requiere hielera.
+- Si el chofer llega sin hielera, el comercio puede rechazar el retiro.
+- La app registra "requiere hielera" por producto en el catalogo.
+
+## Unit economics (por pedido)
+
+Ejemplo tipico de abarrotes:
+
+    Ticket promedio familiar:            $400 MXN
+    Envio cobrado a la familia:          $30 MXN
+    Comision AutoElekIA al comercio:     $20 MXN (5%)
+    ----------------------------------------
+    Total ingreso bruto:                 $50 MXN
+
+    Pago al chofer por entrega:          -$30 MXN
+    Costo Stripe (~3.6% + $3):           -$17 MXN
+    ----------------------------------------
+    Neto AutoElekIA por pedido:          ~$3 MXN
+
+Nota: si la familia paga con SPEI (mas barato que tarjeta), el neto
+sube a ~$15-18 MXN por pedido.
+
+Ejemplo de restaurantes (ticket $250):
+
+    Ticket promedio:                     $250 MXN
+    Envio cobrado a la familia:          $30 MXN
+    Comision AutoElekIA (8%):            $20 MXN
+    ----------------------------------------
+    Total ingreso bruto:                 $50 MXN
+
+    Pago al chofer:                      -$30 MXN
+    Stripe:                              -$12 MXN
+    ----------------------------------------
+    Neto AutoElekIA por pedido:          ~$8 MXN
+
+Proyeccion por volumen (mix 50% abarrotes / 50% restaurantes):
+
+| Pedidos/dia | AutoElekIA/mes | Choferes/mes | GMV/mes |
+|-------------|---------------|--------------|---------|
+| 10 | $1,650 | $9,000 | $97,500 |
+| 50 | $8,250 | $45,000 | $487,500 |
+| 100 | $16,500 | $90,000 | $975,000 |
+| 300 | $49,500 | $270,000 | $2,925,000 |
 
 ## Ventajas competitivas
 
