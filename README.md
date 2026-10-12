@@ -1,46 +1,89 @@
-# Compras del hogar — PWA con Firebase
+# Compras del Hogar
 
-## 1. Crear el proyecto de Firebase (una sola vez)
+PWA colaborativa para organizar las compras de una familia, con
+entrega a domicilio realizada por choferes de la red AutoElekIA.
 
-1. Entra a https://console.firebase.google.com con tu cuenta de Google.
-2. "Agregar proyecto" → dale un nombre (ej. `compras-hogar`) → sigue el asistente.
-3. En el menú lateral: **Compilación → Firestore Database** → "Crear base de datos" → modo **producción** → elige la región más cercana (ej. `us-central`).
-4. En **Firestore → Reglas**, reemplaza el contenido por:
+**Estado:** MVP funcional. En proceso de conversion a plataforma
+de marketplace con comercios locales.
 
-   ```
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       match /items/{doc} {
-         allow read, write: if request.auth != null;
-       }
-     }
-   }
-   ```
-   Esto permite leer/escribir solo a quien haya iniciado sesión (aunque sea anónima) en tu app — no a cualquiera en internet.
+## Que hace
 
-5. En el menú lateral: **Compilación → Authentication** → "Comenzar" → pestaña "Sign-in method" → habilita **Anónimo**.
-6. En el menú lateral: ⚙️ **Configuración del proyecto** → baja hasta "Tus apps" → ícono `</>` (Web) → dale un apodo → "Registrar app".
-7. Copia el objeto `firebaseConfig` que te muestra (apiKey, authDomain, projectId, etc.).
-8. Abre `index.html` en este paquete y pega esos valores donde dice `PEGA_AQUI_TU_...` (busca `firebaseConfig` cerca del inicio del `<script type="module">`).
+- **Familias** arman su lista de compras en tiempo real. Todos los
+  miembros ven que falta y que ya se compro.
+- **Comercios** (proximamente) publican su catalogo. Las familias
+  compran a traves de la plataforma.
+- **Choferes** de la red AutoElekIA entregan el pedido en casa.
+- **AutoElekIA** conecta los 3 actores y cobra una comision al
+  comercio via Stripe Connect.
 
-## 2. Subir a GitHub Pages
+## Modelo de negocio
 
-1. En GitHub, crea un repositorio nuevo (ej. `compras-hogar`), público o privado — ambos funcionan con Pages.
-2. Sube estos 4 archivos a la raíz del repositorio: `index.html`, `manifest.json`, `service-worker.js`, `icon-192.png`, `icon-512.png`.
-3. En el repositorio: **Settings → Pages** → en "Source" elige la rama `main` y carpeta `/ (root)` → Guardar.
-4. Espera 1–2 minutos. GitHub te dará una URL tipo `https://tu-usuario.github.io/compras-hogar/`.
-5. Abre esa URL en tu celular y en el de tu esposa. En Chrome Android aparecerá la opción "Instalar app" o "Agregar a pantalla de inicio" — así queda como app normal, sin necesidad de navegador.
+    FAMILIA paga $500
+        |
+        v
+    STRIPE divide:
+        |
+        +-- $475 al COMERCIO
+        |
+        +-- $25 a AUTOLEKIA (comision)
 
-## 3. Traer tus 53 productos actuales (sin volver a capturarlos)
+AutoElekIA nunca toca el dinero de la compra. Solo cobra su comision
+por servicio a traves de Stripe Connect (application_fee_amount).
 
-1. Abre el artefacto viejo en claude.ai → menú (▾) → "Copiar como Markdown".
-2. Pega ese texto en el chat con Claude y pídele que te lo convierta al formato `nombre; cantidad; precio; categoría`, una línea por producto.
-3. Pega el resultado en el cuadro "Importar lista" de la nueva app (aparece debajo de la lista) → botón "Importar lista".
-4. Hecho una vez, borra ese texto del cuadro — no vuelvas a usarlo salvo que necesites importar algo más.
+## Stack tecnologico
 
-## Notas
+- **PWA Familia:** HTML/CSS/JS vanilla (single-file)
+- **Backend:** Firebase (Firestore + Auth anonima)
+- **Pagos:** Stripe Connect (Express accounts)
+- **Hosting:** GitHub Pages (por ahora)
+- **Notificaciones:** Firebase Cloud Messaging (FCM)
 
-- La lista se sincroniza en tiempo real entre todos los que tengan la URL e inicien sesión (anónima) — pensado para uso familiar, no para compartir públicamente el link.
-- Si algún día quieres cerrar el acceso a alguien, tendrías que rotar las reglas de Firestore o borrar la base — no hay manejo de usuarios individuales en esta versión simple.
-- El service worker cachea el cascarón de la app para que abra rápido y funcione parcialmente sin conexión; los datos en sí siempre requieren internet para sincronizar.
+## Estructura
+
+    .
+    index.html              PWA Familia (todo el codigo)
+    manifest.json           Config PWA
+    service-worker.js       Cache offline
+    icon-192.png
+    icon-512.png
+    docs/                   Documentacion completa
+    README.md               Este archivo
+
+## Documentacion
+
+Ver docs/00-indice.md para el catalogo completo.
+
+- Modelo de negocio: docs/07-modelo-negocio.md
+- Arquitectura tecnica: docs/08-arquitectura.md
+- Roadmap: docs/09-roadmap.md
+- Fiscal y legal: docs/10-fiscal-legal.md
+
+## Instalacion (Firebase)
+
+1. Crear proyecto en https://console.firebase.google.com
+2. Habilitar Firestore (modo produccion)
+3. Habilitar Authentication (proveedor Anonimo)
+4. Configurar reglas Firestore (ver docs/08-arquitectura.md)
+5. Pegar el firebaseConfig en index.html
+6. Deploy a GitHub Pages o Cloudflare Pages
+
+## Uso
+
+1. Abrir la URL en el celular
+2. Aceptar instalar la PWA (aparece banner)
+3. Agregar productos a la lista
+4. Los demas miembros del hogar ven los cambios en tiempo real
+
+## Roadmap
+
+Ver docs/09-roadmap.md.
+
+Proximas fases:
+- Fase 2: Multi-hogar con codigo de invitacion
+- Fase 3: Portales de comercios
+- Fase 4: PWA Chofer con asignacion de entregas
+- Fase 5: Stripe Connect con pagos automaticos
+
+## Autor
+
+Equipo AutoElekIA (c) 2026
